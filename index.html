@@ -190,10 +190,10 @@
   </footer>
 
   <script>
-    // 🔧 КОНФИГУРАЦИЯ
+    // ✅ КОНФИГУРАЦИЯ ПОД ТВОЙ РЕПОЗИТОРИЙ — ГОТОВО К РАБОТЕ
     const CONFIG = {
-      owner: 'Kirilldual',
-      repo: 'free-games-byKirilldual',
+      owner: 'kirilldual0987',
+      repo: 'games-archive',
       branch: 'main',
       cacheTime: 5 * 60 * 1000
     };
@@ -210,7 +210,11 @@
       }
 
       try {
-        const res = await fetch(`https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/gamelist.txt`);
+        // Пробуем загрузить gamelist.txt
+        const url = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/gamelist.txt`;
+        console.log('🔍 Запрос:', url);
+        
+        const res = await fetch(url);
         if (!res.ok) throw new Error(`Не удалось загрузить gamelist.txt (${res.status})`);
 
         const text = await res.text();
@@ -219,9 +223,9 @@
 
         for (let line of lines) {
           line = line.trim();
-          if (!line) continue;
+          if (!line) continue; // пропускаем пустые строки
 
-          // Ищем первое вхождение ":" с учётом пробелов вокруг
+          // Парсим формат: "Название : ссылка"
           const match = line.match(/^(.+?)\s*:\s*(.+)$/);
           if (match) {
             const name = match[1].trim();
@@ -236,7 +240,18 @@
         localStorage.setItem(cacheKey, JSON.stringify(payload));
         renderGames(games);
       } catch (err) {
-        container.innerHTML = `<div class="status">⚠️ ${err.message}<br><small>Убедитесь, что файл gamelist.txt существует в корне репозитория и репозиторий публичный.</small></div>`;
+        console.error('❌ Ошибка:', err);
+        container.innerHTML = `
+          <div class="status">
+            ⚠️ ${err.message}<br><br>
+            <small>
+              Проверь:<br>
+              • Файл gamelist.txt в корне репозитория ${CONFIG.repo}<br>
+              • Репозиторий публичный (Public)<br>
+              • Ветка: ${CONFIG.branch} (не master?)<br>
+              • Формат строк: "Название : ссылка"
+            </small>
+          </div>`;
       }
     }
 
@@ -245,7 +260,7 @@
       const grid = document.getElementById('games-grid');
 
       if (games.length === 0) {
-        grid.innerHTML = '<div class="status">📂 Список игр пуст. Добавьте записи в gamelist.txt</div>';
+        grid.innerHTML = '<div class="status">📂 Список игр пуст. Добавь записи в gamelist.txt</div>';
         return;
       }
 
