@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>free-games-byKirilldual</title>
+  <style>
+    :root {
+      --bg: #0a0a14;
+      --card-bg: rgba(18, 18, 30, 0.75);
+      --accent: #00f3ff;
+      --accent2: #ff0055;
+      --text: #e6e6ef;
+      --text-muted: #8a8a9b;
+      --glass: rgba(255, 255, 255, 0.06);
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(0, 243, 255, 0.08) 0%, transparent 25%),
+        radial-gradient(circle at 85% 80%, rgba(255, 0, 85, 0.08) 0%, transparent 25%);
+    }
+
+    header {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      border-bottom: 1px solid var(--glass);
+      backdrop-filter: blur(8px);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+
+    header p { color: var(--text-muted); font-size: 1rem; }
+
+    main {
+      flex: 1;
+      padding: 2rem 1rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    #games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--glass);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow), 0 0 20px rgba(0, 243, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+    }
+
+    .card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+      word-break: break-word;
+    }
+
+    .card .ext {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.05);
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-bottom: 1.2rem;
+      font-family: monospace;
+    }
+
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #05050a;
+      font-weight: 700;
+      padding: 12px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: all 0.2s;
+      width: 100%;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 243, 255, 0.25);
+    }
+
+    .btn-download:hover {
+      filter: brightness(1.15);
+      transform: scale(1.03);
+      box-shadow: 0 6px 18px rgba(255, 0, 85, 0.35);
+    }
+
+    .status {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .loader {
+      display: inline-block;
+      width: 24px; height: 24px;
+      border: 3px solid var(--glass);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--glass);
+      background: rgba(10, 10, 20, 0.8);
+      backdrop-filter: blur(8px);
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8rem; }
+      #games-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>free-games-byKirilldual</h1>
+    <p>Каталог игр из папки <code>/Games</code> репозитория</p>
+  </header>
+
+  <main id="games-container">
+    <div class="status">
+      <div class="loader"></div><br>
+      Сканирование архивов...
+    </div>
+  </main>
+
+  <footer>
+    © <span id="year"></span> Кирилл | Работает на GitHub Pages & GitHub API
+  </footer>
+
+  <script>
+    // 🔧 КОНФИГУРАЦИЯ
+    const CONFIG = {
+      owner: 'Kirilldual',        // Ваш логин на GitHub
+      repo: 'free-games-byKirilldual', // Имя репозитория
+      branch: 'main',             // main или master
+      gamesPath: 'Games',         // Папка с архивами
+      cacheTime: 5 * 60 * 1000    // Кэш 5 минут (снижает нагрузку на API)
+    };
+
+    const ALLOWED_EXT = /\.(zip|7z|rar|tar\.gz|bz2|xz|rar5)$/i;
+
+    const container = document.getElementById('games-container');
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    async function loadGames() {
+      const cacheKey = `games_${CONFIG.owner}_${CONFIG.repo}`;
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      
+      if (cached && Date.now() - cached.time < CONFIG.cacheTime) {
+        renderGames(cached.data);
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.gamesPath}`);
+        if (!res.ok) throw new Error(res.status === 404 ? 'Папка /Games не найдена' : `Ошибка API: ${res.status}`);
+        
+        const files = await res.json();
+        const archives = files.filter(f => f.type === 'file' && ALLOWED_EXT.test(f.name));
+        
+        const payload = { data: archives, time: Date.now() };
+        localStorage.setItem(cacheKey, JSON.stringify(payload));
+        renderGames(archives);
+      } catch (err) {
+        container.innerHTML = `<div class="status">⚠️ ${err.message}<br><small>Проверьте конфигурацию и публичный доступ к репозиторию.</small></div>`;
+      }
+    }
+
+    function renderGames(files) {
+      container.innerHTML = '<div id="games-grid"></div>';
+      const grid = document.getElementById('games-grid');
+
+      if (files.length === 0) {
+        grid.innerHTML = '<div class="status">📂 В папке /Games пока нет архивов.</div>';
+        return;
+      }
+
+      files.forEach(file => {
+        const cleanName = file.name.replace(ALLOWED_EXT, '');
+        const ext = file.name.split('.').pop().toUpperCase();
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-icon">🎮</div>
+          <h3>${cleanName}</h3>
+          <span class="ext">${ext}</span>
+          <a href="${file.download_url}" class="btn-download" download>
+            ⬇ Download ${cleanName}
+          </a>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadGames);
+  </script>
+</body>
+</html>
