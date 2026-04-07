@@ -58,7 +58,7 @@
 
     #games-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1.5rem;
     }
 
@@ -102,19 +102,29 @@
 
     .card h3 {
       font-size: 1.25rem;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.5rem;
       word-break: break-word;
     }
 
-    .card .ext {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      background: rgba(255,255,255,0.05);
-      padding: 2px 8px;
+    .card .meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .card .tag {
+      font-size: 0.7rem;
+      color: var(--text);
+      background: rgba(255,255,255,0.1);
+      padding: 4px 10px;
       border-radius: 999px;
-      margin-bottom: 1.2rem;
       font-family: monospace;
     }
+
+    .card .tag.platform { background: rgba(0, 243, 255, 0.15); color: var(--accent); }
+    .card .tag.type { background: rgba(255, 0, 85, 0.15); color: var(--accent2); }
 
     .btn-download {
       display: inline-flex;
@@ -181,7 +191,7 @@
   <main id="games-container">
     <div class="status">
       <div class="loader"></div><br>
-      Загрузка списка игр...
+      Загрузка списка...
     </div>
   </main>
 
@@ -190,7 +200,7 @@
   </footer>
 
   <script>
-    // ✅ КОНФИГУРАЦИЯ ПОД ТВОЙ РЕПОЗИТОРИЙ — ГОТОВО К РАБОТЕ
+    // ✅ КОНФИГУРАЦИЯ
     const CONFIG = {
       owner: 'kirilldual0987',
       repo: 'games-archive',
@@ -210,7 +220,6 @@
       }
 
       try {
-        // Пробуем загрузить gamelist.txt
         const url = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/gamelist.txt`;
         console.log('🔍 Запрос:', url);
         
@@ -223,20 +232,37 @@
 
         for (let line of lines) {
           line = line.trim();
-          if (!line) continue; // пропускаем пустые строки
+          if (!line) continue;
 
-          // Парсим формат: "Название : ссылка"
-          const match = line.match(/^(.+?)\s*:\s*(.+)$/);
-          if (match) {
-            const name = match[1].trim();
-            const url = match[2].trim();
-            if (name && url) {
-              games.push({ name, url });
-            }
+          // 🔹 Пробуем новый формат: "Название : Платформа : Тип : Ссылка"
+          const newFormat = line.match(/^(.+?)\s*:\s*(.+?)\s*:\s*(.+?)\s*:\s*(.+)$/);
+          if (newFormat) {
+            games.push({
+              name: newFormat[1].trim(),
+              platform: newFormat[2].trim(),
+              type: newFormat[3].trim(),
+              url: newFormat[4].trim()
+            });
+            continue;
           }
+
+          // 🔹 Фоллбэк на старый формат: "Название : Ссылка"
+          const oldFormat = line.match(/^(.+?)\s*:\s*(.+)$/);
+          if (oldFormat) {
+            games.push({
+              name: oldFormat[1].trim(),
+              platform: 'unk',
+              type: 'unk',
+              url: oldFormat[2].trim()
+            });
+            continue;
+          }
+
+          // 🔹 Если вообще не распарсилось — пропускаем с логом
+          console.warn('⚠️ Пропущена строка:', line);
         }
 
-        const payload = { data: games, time: Date.now() };
+        const payload = {  games, time: Date.now() };
         localStorage.setItem(cacheKey, JSON.stringify(payload));
         renderGames(games);
       } catch (err) {
@@ -248,8 +274,8 @@
               Проверь:<br>
               • Файл gamelist.txt в корне репозитория ${CONFIG.repo}<br>
               • Репозиторий публичный (Public)<br>
-              • Ветка: ${CONFIG.branch} (не master?)<br>
-              • Формат строк: "Название : ссылка"
+              • Ветка: ${CONFIG.branch}<br>
+              • Формат: "Название : Платформа : Тип : Ссылка"
             </small>
           </div>`;
       }
@@ -260,24 +286,43 @@
       const grid = document.getElementById('games-grid');
 
       if (games.length === 0) {
-        grid.innerHTML = '<div class="status">📂 Список игр пуст. Добавь записи в gamelist.txt</div>';
+        grid.innerHTML = '<div class="status">📂 Список пуст. Добавь записи в gamelist.txt</div>';
         return;
       }
 
       games.forEach(game => {
         const safeName = escapeHtml(game.name);
+        const safePlatform = escapeHtml(game.platform);
+        const safeType = escapeHtml(game.type);
+        
+        // Иконка по типу
+        const icon = getTypeIcon(safeType);
+        
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <div class="card-icon">🎮</div>
+          <div class="card-icon">${icon}</div>
           <h3>${safeName}</h3>
-          <span class="ext">GAME</span>
+          <div class="meta">
+            <span class="tag platform">💻 ${safePlatform}</span>
+            <span class="tag type">📦 ${safeType}</span>
+          </div>
           <a href="${game.url}" class="btn-download" target="_blank" rel="noopener noreferrer">
             ⬇ Download ${safeName}
           </a>
         `;
         grid.appendChild(card);
       });
+    }
+
+    function getTypeIcon(type) {
+      const t = type.toLowerCase();
+      if (t.includes('game')) return '🎮';
+      if (t.includes('soft') || t.includes('program') || t.includes('app')) return '💻';
+      if (t.includes('emu') || t.includes('emulator')) return '🕹️';
+      if (t.includes('tool') || t.includes('util')) return '🔧';
+      if (t.includes('unk')) return '❓';
+      return '📦';
     }
 
     function escapeHtml(text) {
