@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="free-games-byKirilldual - Каталог игр и ПО">
   <title>free-games-byKirilldual</title>
   <style>
     :root {
@@ -16,9 +17,7 @@
       --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       --radius: 16px;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: var(--bg);
@@ -30,14 +29,12 @@
         radial-gradient(circle at 15% 20%, rgba(0, 243, 255, 0.08) 0%, transparent 25%),
         radial-gradient(circle at 85% 80%, rgba(255, 0, 85, 0.08) 0%, transparent 25%);
     }
-
     header {
       text-align: center;
       padding: 3rem 1rem 2rem;
       border-bottom: 1px solid var(--glass);
       backdrop-filter: blur(8px);
     }
-
     header h1 {
       font-size: 2.5rem;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
@@ -47,7 +44,6 @@
       margin-bottom: 0;
       letter-spacing: -0.5px;
     }
-
     main {
       flex: 1;
       padding: 2rem 1rem 4rem;
@@ -55,13 +51,11 @@
       margin: 0 auto;
       width: 100%;
     }
-
     #games-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1.5rem;
     }
-
     .card {
       background: var(--card-bg);
       border: 1px solid var(--glass);
@@ -76,7 +70,6 @@
       position: relative;
       overflow: hidden;
     }
-
     .card::before {
       content: '';
       position: absolute;
@@ -85,27 +78,22 @@
       opacity: 0;
       transition: opacity 0.3s;
     }
-
     .card:hover {
       transform: translateY(-6px);
       box-shadow: var(--shadow), 0 0 20px rgba(0, 243, 255, 0.15);
       border-color: rgba(255, 255, 255, 0.15);
     }
-
     .card:hover::before { opacity: 1; }
-
     .card-icon {
       font-size: 3rem;
       margin-bottom: 1rem;
       filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
     }
-
     .card h3 {
       font-size: 1.25rem;
       margin-bottom: 0.5rem;
       word-break: break-word;
     }
-
     .card .meta {
       display: flex;
       gap: 0.5rem;
@@ -113,7 +101,6 @@
       justify-content: center;
       margin-bottom: 1rem;
     }
-
     .card .tag {
       font-size: 0.7rem;
       color: var(--text);
@@ -122,10 +109,8 @@
       border-radius: 999px;
       font-family: monospace;
     }
-
     .card .tag.platform { background: rgba(0, 243, 255, 0.15); color: var(--accent); }
     .card .tag.type { background: rgba(255, 0, 85, 0.15); color: var(--accent2); }
-
     .btn-download {
       display: inline-flex;
       align-items: center;
@@ -141,20 +126,17 @@
       justify-content: center;
       box-shadow: 0 4px 12px rgba(0, 243, 255, 0.25);
     }
-
     .btn-download:hover {
       filter: brightness(1.15);
       transform: scale(1.03);
       box-shadow: 0 6px 18px rgba(255, 0, 85, 0.35);
     }
-
     .status {
       text-align: center;
       padding: 3rem;
       color: var(--text-muted);
       font-size: 1.1rem;
     }
-
     .loader {
       display: inline-block;
       width: 24px; height: 24px;
@@ -164,9 +146,7 @@
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
-
     footer {
       text-align: center;
       padding: 1.5rem;
@@ -176,7 +156,6 @@
       background: rgba(10, 10, 20, 0.8);
       backdrop-filter: blur(8px);
     }
-
     @media (max-width: 600px) {
       header h1 { font-size: 1.8rem; }
       #games-grid { grid-template-columns: 1fr; }
@@ -200,31 +179,18 @@
   </footer>
 
   <script>
-    // ✅ КОНФИГУРАЦИЯ
-    const CONFIG = {
-      owner: 'kirilldual0987',
-      repo: 'games-archive',
-      branch: 'main',
-      cacheTime: 5 * 60 * 1000
-    };
-
+    // 🔒 ОБХОД БЛОКИРОВКИ РКН:
+    // raw.githubusercontent.com блокируется в РФ. 
+    // Загружаем файл по относительному пути ./gamelist.txt, 
+    // чтобы запрос шёл на тот же домен (github.io), который доступен.
+    const GAMES_FILE = './gamelist.txt';
     const container = document.getElementById('games-container');
 
     async function loadGames() {
-      const cacheKey = `gamelist_${CONFIG.owner}_${CONFIG.repo}`;
-      const cached = JSON.parse(localStorage.getItem(cacheKey));
-
-      if (cached && Date.now() - cached.time < CONFIG.cacheTime) {
-        renderGames(cached.data);
-        return;
-      }
-
       try {
-        const url = `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/gamelist.txt`;
-        console.log('🔍 Запрос:', url);
-        
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`Не удалось загрузить gamelist.txt (${res.status})`);
+        // ?t=... отключает кэш браузера, чтобы новые игры появлялись сразу
+        const res = await fetch(`${GAMES_FILE}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`Файл не найден или недоступен (${res.status})`);
 
         const text = await res.text();
         const lines = text.split('\n');
@@ -234,48 +200,28 @@
           line = line.trim();
           if (!line) continue;
 
-          // 🔹 Пробуем новый формат: "Название : Платформа : Тип : Ссылка"
-          const newFormat = line.match(/^(.+?)\s*:\s*(.+?)\s*:\s*(.+?)\s*:\s*(.+)$/);
-          if (newFormat) {
+          // Парсим формат: "Название : Платформа : Тип : Ссылка"
+          const match = line.match(/^(.+?)\s*:\s*(.+?)\s*:\s*(.+?)\s*:\s*(.+)$/);
+          if (match) {
             games.push({
-              name: newFormat[1].trim(),
-              platform: newFormat[2].trim(),
-              type: newFormat[3].trim(),
-              url: newFormat[4].trim()
+              name: match[1].trim(),
+              platform: match[2].trim(),
+              type: match[3].trim(),
+              url: match[4].trim()
             });
-            continue;
           }
-
-          // 🔹 Фоллбэк на старый формат: "Название : Ссылка"
-          const oldFormat = line.match(/^(.+?)\s*:\s*(.+)$/);
-          if (oldFormat) {
-            games.push({
-              name: oldFormat[1].trim(),
-              platform: 'unk',
-              type: 'unk',
-              url: oldFormat[2].trim()
-            });
-            continue;
-          }
-
-          // 🔹 Если вообще не распарсилось — пропускаем с логом
-          console.warn('⚠️ Пропущена строка:', line);
         }
 
-        const payload = {  games, time: Date.now() };
-        localStorage.setItem(cacheKey, JSON.stringify(payload));
         renderGames(games);
       } catch (err) {
-        console.error('❌ Ошибка:', err);
+        console.error('❌ Ошибка загрузки:', err);
         container.innerHTML = `
           <div class="status">
-            ⚠️ ${err.message}<br><br>
+            ⚠️ Не удалось загрузить список игр.<br><br>
             <small>
-              Проверь:<br>
-              • Файл gamelist.txt в корне репозитория ${CONFIG.repo}<br>
-              • Репозиторий публичный (Public)<br>
-              • Ветка: ${CONFIG.branch}<br>
-              • Формат: "Название : Платформа : Тип : Ссылка"
+              1. Убедись, что gamelist.txt лежит в корне репозитория.<br>
+              2. Если сайт открывается, но список пуст — проверь консоль (F12).<br>
+              3. В редких случаях провайдеры режут .github.io. Если так — пиши, дам инструкцию по зеркалу.
             </small>
           </div>`;
       }
@@ -294,10 +240,8 @@
         const safeName = escapeHtml(game.name);
         const safePlatform = escapeHtml(game.platform);
         const safeType = escapeHtml(game.type);
-        
-        // Иконка по типу
         const icon = getTypeIcon(safeType);
-        
+
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
@@ -321,7 +265,6 @@
       if (t.includes('soft') || t.includes('program') || t.includes('app')) return '💻';
       if (t.includes('emu') || t.includes('emulator')) return '🕹️';
       if (t.includes('tool') || t.includes('util')) return '🔧';
-      if (t.includes('unk')) return '❓';
       return '📦';
     }
 
