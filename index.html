@@ -44,11 +44,9 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0;
       letter-spacing: -0.5px;
     }
-
-    header p { color: var(--text-muted); font-size: 1rem; }
 
     main {
       flex: 1;
@@ -178,83 +176,99 @@
 <body>
   <header>
     <h1>free-games-byKirilldual</h1>
-    <p>Каталог игр из папки <code>/Games</code> репозитория</p>
   </header>
 
   <main id="games-container">
     <div class="status">
       <div class="loader"></div><br>
-      Сканирование архивов...
+      Загрузка списка игр...
     </div>
   </main>
 
   <footer>
-    © <span id="year"></span> Кирилл | Работает на GitHub Pages & GitHub API
+    © 2026 kirilldual
   </footer>
 
   <script>
     // 🔧 КОНФИГУРАЦИЯ
     const CONFIG = {
-      owner: 'Kirilldual',        // Ваш логин на GitHub
-      repo: 'free-games-byKirilldual', // Имя репозитория
-      branch: 'main',             // main или master
-      gamesPath: 'Games',         // Папка с архивами
-      cacheTime: 5 * 60 * 1000    // Кэш 5 минут (снижает нагрузку на API)
+      owner: 'Kirilldual',
+      repo: 'free-games-byKirilldual',
+      branch: 'main',
+      cacheTime: 5 * 60 * 1000
     };
 
-    const ALLOWED_EXT = /\.(zip|7z|rar|tar\.gz|bz2|xz|rar5)$/i;
-
     const container = document.getElementById('games-container');
-    document.getElementById('year').textContent = new Date().getFullYear();
 
     async function loadGames() {
-      const cacheKey = `games_${CONFIG.owner}_${CONFIG.repo}`;
+      const cacheKey = `gamelist_${CONFIG.owner}_${CONFIG.repo}`;
       const cached = JSON.parse(localStorage.getItem(cacheKey));
-      
+
       if (cached && Date.now() - cached.time < CONFIG.cacheTime) {
         renderGames(cached.data);
         return;
       }
 
       try {
-        const res = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${CONFIG.gamesPath}`);
-        if (!res.ok) throw new Error(res.status === 404 ? 'Папка /Games не найдена' : `Ошибка API: ${res.status}`);
-        
-        const files = await res.json();
-        const archives = files.filter(f => f.type === 'file' && ALLOWED_EXT.test(f.name));
-        
-        const payload = { data: archives, time: Date.now() };
+        const res = await fetch(`https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/gamelist.txt`);
+        if (!res.ok) throw new Error(`Не удалось загрузить gamelist.txt (${res.status})`);
+
+        const text = await res.text();
+        const lines = text.split('\n');
+        const games = [];
+
+        for (let line of lines) {
+          line = line.trim();
+          if (!line) continue;
+
+          // Ищем первое вхождение ":" с учётом пробелов вокруг
+          const match = line.match(/^(.+?)\s*:\s*(.+)$/);
+          if (match) {
+            const name = match[1].trim();
+            const url = match[2].trim();
+            if (name && url) {
+              games.push({ name, url });
+            }
+          }
+        }
+
+        const payload = { data: games, time: Date.now() };
         localStorage.setItem(cacheKey, JSON.stringify(payload));
-        renderGames(archives);
+        renderGames(games);
       } catch (err) {
-        container.innerHTML = `<div class="status">⚠️ ${err.message}<br><small>Проверьте конфигурацию и публичный доступ к репозиторию.</small></div>`;
+        container.innerHTML = `<div class="status">⚠️ ${err.message}<br><small>Убедитесь, что файл gamelist.txt существует в корне репозитория и репозиторий публичный.</small></div>`;
       }
     }
 
-    function renderGames(files) {
+    function renderGames(games) {
       container.innerHTML = '<div id="games-grid"></div>';
       const grid = document.getElementById('games-grid');
 
-      if (files.length === 0) {
-        grid.innerHTML = '<div class="status">📂 В папке /Games пока нет архивов.</div>';
+      if (games.length === 0) {
+        grid.innerHTML = '<div class="status">📂 Список игр пуст. Добавьте записи в gamelist.txt</div>';
         return;
       }
 
-      files.forEach(file => {
-        const cleanName = file.name.replace(ALLOWED_EXT, '');
-        const ext = file.name.split('.').pop().toUpperCase();
+      games.forEach(game => {
+        const safeName = escapeHtml(game.name);
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
           <div class="card-icon">🎮</div>
-          <h3>${cleanName}</h3>
-          <span class="ext">${ext}</span>
-          <a href="${file.download_url}" class="btn-download" download>
-            ⬇ Download ${cleanName}
+          <h3>${safeName}</h3>
+          <span class="ext">GAME</span>
+          <a href="${game.url}" class="btn-download" target="_blank" rel="noopener noreferrer">
+            ⬇ Download ${safeName}
           </a>
         `;
         grid.appendChild(card);
       });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     document.addEventListener('DOMContentLoaded', loadGames);
